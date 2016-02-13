@@ -1,0 +1,10 @@
+{
+	"name": "yamlvalidator",
+	"description": "A minimal D application.",
+	"copyright": "Copyright © 2014, Cameron",
+	"authors": ["Cameron"],
+	"dependencies": {
+		"standardpaths": "~>0.2",
+		"siryul": "~>0.2"
+	}
+}
