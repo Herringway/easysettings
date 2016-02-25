@@ -1,7 +1,7 @@
 {
-	"name": "yamlvalidator",
-	"description": "A minimal D application.",
-	"copyright": "Copyright © 2014, Cameron",
+	"name": "easysettings",
+	"description": "An easier way of saving and loading settings",
+	"copyright": "Copyright © 2016, Cameron",
 	"authors": ["Cameron"],
 	"dependencies": {
 		"standardpaths": "~>0.2",
