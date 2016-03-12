@@ -11,11 +11,11 @@ private alias settingsFormat = YAML;
  * T = Type of settings struct to load
  * name = Subdirectory of settings dir to save config to. Created if nonexistent.
  */
-auto loadSettings(T)(string name) {
+auto loadSettings(T)(string name, string filename = settingsFilename) {
 	import std.algorithm : filter, map;
 	import std.range : chain;
 	import std.path : exists, buildPath;
-	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, settingsFilename)).filter!exists;
+	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, filename)).filter!exists;
 	if (!paths.empty)
 		return fromFile!(T,settingsFormat)(paths.front);
 	else
@@ -43,13 +43,13 @@ unittest {
  * data = The data that will be saved to the settings file.
  * name = The subdirectory of the settings dir to save the config to. Created if nonexistent.
  */
-void saveSettings(T)(T data, string name) {
+void saveSettings(T)(T data, string name, string filename = settingsFilename) {
 	import std.path : exists, buildPath;
 	import std.file : mkdir;
 	string configPath = buildPath(writablePath(StandardPath.config), name);
     if (!configPath.exists)
         mkdir(configPath);
-	data.toFile!settingsFormat(buildPath(configPath, settingsFilename));
+	data.toFile!settingsFormat(buildPath(configPath, filename));
 }
 ///
 unittest {
@@ -68,10 +68,10 @@ unittest {
  * Params:
  * name = App name.
  */
-void deleteSettings(string name) {
+void deleteSettings(string name, string filename = settingsFilename) {
 	import std.path : buildPath, dirName, exists;
 	import std.file : remove, dirEntries, SpanMode, rmdir;
-	auto path = buildPath(writablePath(StandardPath.config), name, settingsFilename);
+	auto path = buildPath(writablePath(StandardPath.config), name, filename);
 	if (path.exists)
 		remove(path);
 	if (path.dirName.exists && path.dirName.dirEntries(SpanMode.shallow).empty)
