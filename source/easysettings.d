@@ -1,7 +1,8 @@
 private import siryul;
 private import standardpaths;
 
-private enum settingsFilename = "settings.yml";
+private enum settingsFilename = "settings";
+private enum settingsExtension = "yml";
 private alias settingsFormat = YAML;
 /**
  * Load settings. Will create settings file by default. Searches all system-wide
@@ -14,8 +15,8 @@ private alias settingsFormat = YAML;
 auto loadSettings(T)(string name, string filename = settingsFilename) {
 	import std.algorithm : filter, map;
 	import std.range : chain;
-	import std.path : exists, buildPath;
-	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, filename)).filter!exists;
+	import std.path : exists, buildPath, setExtension;
+	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, setExtension(filename, settingsExtension))).filter!exists;
 	if (!paths.empty)
 		return fromFile!(T,settingsFormat)(paths.front);
 	else
@@ -44,12 +45,12 @@ unittest {
  * name = The subdirectory of the settings dir to save the config to. Created if nonexistent.
  */
 void saveSettings(T)(T data, string name, string filename = settingsFilename) {
-	import std.path : exists, buildPath;
+	import std.path : exists, buildPath, setExtension;
 	import std.file : mkdir;
 	string configPath = buildPath(writablePath(StandardPath.config), name);
     if (!configPath.exists)
         mkdir(configPath);
-	data.toFile!settingsFormat(buildPath(configPath, filename));
+	data.toFile!settingsFormat(buildPath(configPath, setExtension(filename, settingsExtension)));
 }
 ///
 unittest {
@@ -69,9 +70,9 @@ unittest {
  * name = App name.
  */
 void deleteSettings(string name, string filename = settingsFilename) {
-	import std.path : buildPath, dirName, exists;
+	import std.path : buildPath, dirName, exists, setExtension;
 	import std.file : remove, dirEntries, SpanMode, rmdir;
-	auto path = buildPath(writablePath(StandardPath.config), name, filename);
+	auto path = buildPath(writablePath(StandardPath.config), name, setExtension(filename, settingsExtension));
 	if (path.exists)
 		remove(path);
 	if (path.dirName.exists && path.dirName.dirEntries(SpanMode.shallow).empty)
