@@ -16,7 +16,7 @@ auto loadSettings(T)(string name, string filename = settingsFilename) {
 	import std.algorithm : filter, map;
 	import std.range : chain;
 	import std.path : exists, buildPath, setExtension;
-	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, setExtension(filename, settingsExtension))).filter!exists;
+	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, filename.setExtension(settingsExtension))).filter!exists;
 	if (!paths.empty)
 		return fromFile!(T,settingsFormat)(paths.front);
 	else
@@ -49,8 +49,8 @@ void saveSettings(T)(T data, string name, string filename = settingsFilename) {
 	import std.file : mkdir;
 	string configPath = buildPath(writablePath(StandardPath.config), name);
     if (!configPath.exists)
-        mkdir(configPath);
-	data.toFile!settingsFormat(buildPath(configPath, setExtension(filename, settingsExtension)));
+        mkdirRecurse(configPath);
+	data.toFile!settingsFormat(buildPath(configPath, filename.setExtension(settingsExtension)));
 }
 ///
 unittest {
@@ -72,7 +72,7 @@ unittest {
 void deleteSettings(string name, string filename = settingsFilename) {
 	import std.path : buildPath, dirName, exists, setExtension;
 	import std.file : remove, dirEntries, SpanMode, rmdir;
-	auto path = buildPath(writablePath(StandardPath.config), name, setExtension(filename, settingsExtension));
+	auto path = buildPath(writablePath(StandardPath.config), name, filename.setExtension(settingsExtension));
 	if (path.exists)
 		remove(path);
 	if (path.dirName.exists && path.dirName.dirEntries(SpanMode.shallow).empty)
