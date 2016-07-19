@@ -46,7 +46,7 @@ unittest {
  */
 void saveSettings(T)(T data, string name, string filename = settingsFilename) {
 	import std.path : exists, buildPath, setExtension;
-	import std.file : mkdir;
+	import std.file : mkdirRecurse;
 	string configPath = buildPath(writablePath(StandardPath.config), name);
     if (!configPath.exists)
         mkdirRecurse(configPath);
