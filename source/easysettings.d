@@ -20,7 +20,7 @@ auto loadSettings(T)(string name, string filename = settingsFilename) {
 	if (!paths.empty)
 		return fromFile!(T,settingsFormat)(paths.front);
 	else
-		saveSettings(T.init, name);
+		saveSettings(T.init, name, filename);
 	return T.init;
 }
 ///
