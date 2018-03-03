@@ -15,7 +15,8 @@ private alias settingsFormat = YAML;
 auto loadSettings(T)(string name, string filename = settingsFilename) {
 	import std.algorithm : filter, map;
 	import std.range : chain;
-	import std.path : exists, buildPath, setExtension;
+	import std.file : exists;
+	import std.path : buildPath, setExtension;
 	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, filename.setExtension(settingsExtension))).filter!exists;
 	if (!paths.empty)
 		return fromFile!(T,settingsFormat)(paths.front);
@@ -45,8 +46,8 @@ unittest {
  * name = The subdirectory of the settings dir to save the config to. Created if nonexistent.
  */
 void saveSettings(T)(T data, string name, string filename = settingsFilename) {
-	import std.path : exists, buildPath, setExtension;
-	import std.file : mkdirRecurse;
+	import std.path : buildPath, setExtension;
+	import std.file : exists, mkdirRecurse;
 	string configPath = buildPath(writablePath(StandardPath.config), name);
     if (!configPath.exists)
         mkdirRecurse(configPath);
@@ -70,8 +71,8 @@ unittest {
  * name = App name.
  */
 void deleteSettings(string name, string filename = settingsFilename) {
-	import std.path : buildPath, dirName, exists, setExtension;
-	import std.file : remove, dirEntries, SpanMode, rmdir;
+	import std.path : buildPath, dirName, setExtension;
+	import std.file : exists, remove, dirEntries, SpanMode, rmdir;
 	auto path = buildPath(writablePath(StandardPath.config), name, filename.setExtension(settingsExtension));
 	if (path.exists)
 		remove(path);
