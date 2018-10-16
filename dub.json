@@ -1,7 +1,7 @@
 {
 	"name": "easysettings",
 	"description": "An easier way of saving and loading settings",
-	"copyright": "Copyright © 2016, Cameron \"Herringway\" Ross",
+	"copyright": "Copyright © 2018, Cameron \"Herringway\" Ross",
 	"authors": ["Cameron \"Herringway\" Ross"],
 	"license": "BSL-1.0",
 	"dependencies": {
