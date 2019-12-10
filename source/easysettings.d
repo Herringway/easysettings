@@ -12,6 +12,7 @@ private alias settingsFormat = YAML;
  * Params:
  * T = Type of settings struct to load
  * name = Subdirectory of settings dir to save config to. Created if nonexistent.
+ * filename = The filename the settings will be loaded from.
  */
 auto loadSettings(T)(string name, string filename = settingsFilename) {
 	import std.algorithm : filter, map;
@@ -46,6 +47,7 @@ unittest {
  * Params:
  * data = The data that will be saved to the settings file.
  * name = The subdirectory of the settings dir to save the config to. Created if nonexistent.
+ * filename = The filename the settings will be saved to.
  */
 void saveSettings(T)(T data, string name, string filename = settingsFilename) {
 	import std.path : buildPath, setExtension;
@@ -72,6 +74,7 @@ unittest {
  * library. Also removes directory if empty.
  * Params:
  * name = App name.
+ * filename = The settings file that will be deleted.
  */
 void deleteSettings(string name, string filename = settingsFilename) {
 	import std.path : buildPath, dirName, setExtension;
