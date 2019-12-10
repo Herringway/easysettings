@@ -20,7 +20,7 @@ auto loadSettings(T)(string name, string filename = settingsFilename) {
 	import std.path : buildPath, setExtension;
 	auto paths = standardPaths(StandardPath.config).chain(["."]).map!(x => buildPath(x, name, filename.setExtension(settingsExtension))).filter!exists;
 	if (!paths.empty) {
-		return fromFile!(T, settingsFormat)(paths.front);
+		return fromFile!(T, settingsFormat, DeSiryulize.optionalByDefault)(paths.front);
 	} else {
 		saveSettings(T.init, name, filename);
 	}
