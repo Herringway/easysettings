@@ -74,8 +74,6 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
 void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name, string filename = settingsFilename, string subdir = "") {
 	import std.conv : text;
 	import std.exception : enforce;
-	import std.file : exists, mkdirRecurse;
-	import std.path : buildPath, setExtension;
 	auto paths = getSettingsPaths(name, subdir, filename, true);
 	enforce (!paths.empty, "No writable paths found");
 	data.toFile!settingsFormat(paths.front.text);
@@ -102,7 +100,7 @@ unittest {
 void deleteSettings(alias settingsFormat = SettingsFormat)(string name, string filename = settingsFilename, string subdir = "") {
 	import std.conv : text;
 	import std.file : exists, remove, dirEntries, SpanMode, rmdir;
-	import std.path : buildPath, dirName, setExtension;
+	import std.path : dirName;
 	foreach (path; getSettingsPaths(name, subdir, filename, true)) {
 		if (path.exists) {
 			remove(path);
