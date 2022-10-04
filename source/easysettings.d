@@ -13,15 +13,17 @@ private alias SettingsFormat = YAML;
  * filename = The filename the settings will be loaded from.
  * subdir = The subdirectory that the settings will be loaded from.
  */
-auto getSettingsPaths(alias settingsFormat = SettingsFormat)(string name, string subdir, string filename) {
+auto getSettingsPaths(alias settingsFormat = SettingsFormat)(string name, string subdir, string filename, bool writable) {
 	import std.algorithm : cartesianProduct, filter, map;
 	import std.experimental.logger : tracef;
 	import std.file : exists;
 	import std.path : buildPath, chainPath, withExtension;
-	import std.range : chain, only;
-	auto searchPaths = standardPaths(StandardPath.config, buildPath(name, subdir)).chain(["."]).cartesianProduct(only(SettingsExtensions!settingsFormat)).map!(x => chainPath(x[0], filename.withExtension(x[1])));
+	import std.range : chain, choose, only;
+	const subPath = buildPath(name, subdir);
+	const candidates = writable.choose(only(writablePath(StandardPath.config, subPath, FolderFlag.create)), standardPaths(StandardPath.config, subPath));
+	auto searchPaths = candidates.chain(["."]).cartesianProduct(only(SettingsExtensions!settingsFormat)).map!(x => chainPath(x[0], filename.withExtension(x[1])));
 	tracef("Search paths: %s", searchPaths);
-	return searchPaths.filter!exists;
+	return searchPaths.filter!(x => writable || x.exists);
 }
 
 /**
@@ -37,7 +39,7 @@ auto getSettingsPaths(alias settingsFormat = SettingsFormat)(string name, string
 auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string filename = settingsFilename, string subdir = "") {
 	import std.conv : text;
 	import std.experimental.logger : tracef;
-	auto paths = getSettingsPaths!settingsFormat(name, subdir, filename);
+	auto paths = getSettingsPaths!settingsFormat(name, subdir, filename, false);
 	if (!paths.empty) {
 		tracef("Loading settings from '%s'", paths.front);
 		return fromFile!(T, settingsFormat, DeSiryulize.optionalByDefault)(paths.front.text);
@@ -53,11 +55,11 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
 		string text;
 		string[] texts;
 	}
-	auto settings = loadSettings!Settings("testapp");
+	auto settings = loadSettings!Settings("testapp", "settings", "subdir");
 	settings.texts = ["a", "b", "c"];
-	saveSettings(settings, "testapp");
+	saveSettings(settings, "testapp", "settings", "subdir");
 
-	auto reloadedSettings = loadSettings!Settings("testapp");
+	auto reloadedSettings = loadSettings!Settings("testapp", "settings", "subdir");
 	assert(reloadedSettings == settings);
 	assert(reloadedSettings.texts == ["a", "b", "c"]);
 }
@@ -70,13 +72,13 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
  * subdir = The subdirectory that the settings will be saved in.
  */
 void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name, string filename = settingsFilename, string subdir = "") {
-	import std.path : buildPath, setExtension;
+	import std.conv : text;
+	import std.exception : enforce;
 	import std.file : exists, mkdirRecurse;
-	string configPath = writablePath(StandardPath.config, buildPath(name, subdir));
-    if (!configPath.exists) {
-        mkdirRecurse(configPath);
-    }
-	data.toFile!settingsFormat(buildPath(configPath, filename.setExtension(SettingsExtensions!settingsFormat[0])));
+	import std.path : buildPath, setExtension;
+	auto paths = getSettingsPaths(name, subdir, filename, true);
+	enforce (!paths.empty, "No writable paths found");
+	data.toFile!settingsFormat(paths.front.text);
 }
 ///
 unittest {
@@ -85,9 +87,9 @@ unittest {
 		string text;
 		string[] texts;
 	}
-	saveSettings(Settings(true, "some words", ["c", "b", "a"]), "testapp");
+	saveSettings(Settings(true, "some words", ["c", "b", "a"]), "testapp", "settings", "subdir");
 
-	assert(loadSettings!Settings("testapp") == Settings(true, "some words", ["c", "b", "a"]));
+	assert(loadSettings!Settings("testapp", "settings", "subdir") == Settings(true, "some words", ["c", "b", "a"]));
 }
 /**
  * Deletes settings files for the specified app that are handled by this
@@ -98,19 +100,21 @@ unittest {
  * subdir = Settings subdirectory to delete.
  */
 void deleteSettings(alias settingsFormat = SettingsFormat)(string name, string filename = settingsFilename, string subdir = "") {
-	import std.path : buildPath, dirName, setExtension;
+	import std.conv : text;
 	import std.file : exists, remove, dirEntries, SpanMode, rmdir;
-	auto path = buildPath(writablePath(StandardPath.config, buildPath(name, subdir)), filename.setExtension(SettingsExtensions!settingsFormat[0]));
-	if (path.exists) {
-		remove(path);
-	}
-	if (path.dirName.exists && path.dirName.dirEntries(SpanMode.shallow).empty) {
-		rmdir(path.dirName);
+	import std.path : buildPath, dirName, setExtension;
+	foreach (path; getSettingsPaths(name, subdir, filename, true)) {
+		if (path.exists) {
+			remove(path);
+			if (path.dirName.text.dirEntries(SpanMode.shallow).empty) {
+				rmdir(path.dirName);
+			}
+		}
 	}
 }
 ///
 unittest {
-	deleteSettings("testapp");
+	deleteSettings("testapp", "settings", "subdir");
 }
 
 private template SettingsExtensions(T) {
