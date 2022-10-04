@@ -42,7 +42,7 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
 		tracef("Loading settings from '%s'", paths.front);
 		return fromFile!(T, settingsFormat, DeSiryulize.optionalByDefault)(paths.front.text);
 	} else {
-		saveSettings(T.init, name, filename);
+		saveSettings(T.init, name, filename, subdir);
 	}
 	return T.init;
 }
