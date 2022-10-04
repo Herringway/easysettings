@@ -21,7 +21,7 @@ auto getSettingsPaths(alias settingsFormat = SettingsFormat)(string name, string
 	import std.range : chain, choose, only;
 	const subPath = buildPath(name, subdir);
 	const candidates = writable.choose(only(writablePath(StandardPath.config, subPath, FolderFlag.create)), standardPaths(StandardPath.config, subPath));
-	auto searchPaths = candidates.chain(["."]).cartesianProduct(only(SettingsExtensions!settingsFormat)).map!(x => chainPath(x[0], filename.withExtension(x[1])));
+	auto searchPaths = candidates.chain(["."]).cartesianProduct(only(SettingsExtensions!settingsFormat)).map!(x => chainPath(x[0], filename ~ x[1]));
 	tracef("Search paths: %s", searchPaths);
 	return searchPaths.filter!(x => writable || x.exists);
 }
