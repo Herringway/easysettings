@@ -19,7 +19,7 @@ auto getSettingsPaths(alias settingsFormat = SettingsFormat)(string name, string
 	import std.file : exists;
 	import std.path : buildPath, chainPath, withExtension;
 	import std.range : chain, only;
-	auto searchPaths = standardPaths(StandardPath.config, buildPath(subdir, name)).chain(["."]).cartesianProduct(only(SettingsExtensions!settingsFormat)).map!(x => chainPath(x[0], filename.withExtension(x[1])));
+	auto searchPaths = standardPaths(StandardPath.config, buildPath(name, subdir)).chain(["."]).cartesianProduct(only(SettingsExtensions!settingsFormat)).map!(x => chainPath(x[0], filename.withExtension(x[1])));
 	tracef("Search paths: %s", searchPaths);
 	return searchPaths.filter!exists;
 }
@@ -72,7 +72,7 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
 void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name, string filename = settingsFilename, string subdir = "") {
 	import std.path : buildPath, setExtension;
 	import std.file : exists, mkdirRecurse;
-	string configPath = writablePath(StandardPath.config, buildPath(subdir, name));
+	string configPath = writablePath(StandardPath.config, buildPath(name, subdir));
     if (!configPath.exists) {
         mkdirRecurse(configPath);
     }
@@ -100,7 +100,7 @@ unittest {
 void deleteSettings(alias settingsFormat = SettingsFormat)(string name, string filename = settingsFilename, string subdir = "") {
 	import std.path : buildPath, dirName, setExtension;
 	import std.file : exists, remove, dirEntries, SpanMode, rmdir;
-	auto path = buildPath(writablePath(StandardPath.config, buildPath(subdir, name)), filename.setExtension(SettingsExtensions!settingsFormat[0]));
+	auto path = buildPath(writablePath(StandardPath.config, buildPath(name, subdir)), filename.setExtension(SettingsExtensions!settingsFormat[0]));
 	if (path.exists) {
 		remove(path);
 	}
