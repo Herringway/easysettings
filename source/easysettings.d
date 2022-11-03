@@ -145,8 +145,14 @@ void safeSave(string path, string data) @safe {
 
 @safe unittest {
 	import std.exception : assertThrown;
-	import std.file : exists, getAttributes, remove, setAttributes;
-	enum testFile = "test.txt";
+	import std.file : exists, getAttributes, mkdir, remove, rmdir, setAttributes;
+	import std.path : buildPath;
+	enum testdir = "test";
+	enum testFile = buildPath(testdir, "test.txt");
+	mkdir(testdir);
+	scope(exit) {
+		rmdir(testdir);
+	}
 	safeSave(testFile, "");
 	const oldAttributes = getAttributes(testFile);
 	version(Windows) {
@@ -155,7 +161,7 @@ void safeSave(string path, string data) @safe {
 		enum attributesTarget = testFile;
 	} else version(Posix) {
 		enum readOnly = 555;
-		enum attributesTarget = ".";
+		enum attributesTarget = "test";
 	}
 	setAttributes(attributesTarget, readOnly);
 	scope(exit) {
