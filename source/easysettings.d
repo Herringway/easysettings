@@ -76,7 +76,7 @@ void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name,
 	import std.exception : enforce;
 	auto paths = getSettingsPaths(name, subdir, filename, true);
 	enforce (!paths.empty, "No writable paths found");
-	data.toFile!settingsFormat(paths.front.text);
+	safeSave(paths.front.text, data.toString!settingsFormat());
 }
 ///
 unittest {
@@ -122,4 +122,44 @@ private template SettingsExtensions(T) {
 	} else static if (is(T == JSON)) {
 		alias SettingsExtensions = AliasSeq!(".json");
 	}
+}
+
+/** Safely save a text file. If something goes wrong while writing, the new
+ * file is simply discarded while the old one is untouched
+ */
+void safeSave(string path, string data) @safe {
+	import std.file : exists, remove, rename, write;
+	import std.path : setExtension;
+	const tmpFile = path.setExtension(".tmp");
+	scope(exit) {
+		if (tmpFile.exists) {
+			remove(tmpFile);
+		}
+	}
+	write(tmpFile, data);
+	if (path.exists) {
+		remove(path);
+	}
+	rename(tmpFile, path);
+}
+
+@safe unittest {
+	import std.exception : assertThrown;
+	import std.file : exists, getAttributes, remove, setAttributes;
+	enum testFile = "test.txt";
+	safeSave(testFile, "");
+	const oldAttributes = getAttributes(testFile);
+	version(Windows) {
+		import core.sys.windows.winnt : FILE_ATTRIBUTE_READONLY;
+		enum readOnly = FILE_ATTRIBUTE_READONLY;
+	} else version(Posix) {
+		enum readOnly = 444;
+	}
+	setAttributes(testFile, readOnly);
+	scope(exit) {
+		setAttributes(testFile, oldAttributes);
+		remove(testFile);
+	}
+	assertThrown(safeSave(testFile, ""));
+	assert(!(testFile~".tmp").exists);
 }
