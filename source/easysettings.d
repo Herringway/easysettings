@@ -152,12 +152,14 @@ void safeSave(string path, string data) @safe {
 	version(Windows) {
 		import core.sys.windows.winnt : FILE_ATTRIBUTE_READONLY;
 		enum readOnly = FILE_ATTRIBUTE_READONLY;
+		enum attributesTarget = testFile;
 	} else version(Posix) {
-		enum readOnly = 444;
+		enum readOnly = 555;
+		enum attributesTarget = ".";
 	}
-	setAttributes(testFile, readOnly);
+	setAttributes(attributesTarget, readOnly);
 	scope(exit) {
-		setAttributes(testFile, oldAttributes);
+		setAttributes(attributesTarget, oldAttributes);
 		remove(testFile);
 	}
 	assertThrown(safeSave(testFile, ""));
