@@ -154,7 +154,6 @@ void safeSave(string path, string data) @safe {
 		rmdir(testdir);
 	}
 	safeSave(testFile, "");
-	const oldAttributes = getAttributes(testFile);
 	version(Windows) {
 		import core.sys.windows.winnt : FILE_ATTRIBUTE_READONLY;
 		enum readOnly = FILE_ATTRIBUTE_READONLY;
@@ -163,6 +162,7 @@ void safeSave(string path, string data) @safe {
 		enum readOnly = 555;
 		enum attributesTarget = "test";
 	}
+	const oldAttributes = getAttributes(attributesTarget);
 	setAttributes(attributesTarget, readOnly);
 	scope(exit) {
 		setAttributes(attributesTarget, oldAttributes);
