@@ -86,14 +86,16 @@ auto loadSubdirSettings(T, alias settingsFormat = SettingsFormat)(string name, s
 }
 ///
 @system unittest {
-	import std.algorithm.comparison : equal;
-	import std.range : only;
+	import std.array : array;
+	import std.algorithm.searching : canFind;
 	static struct Settings {
 		uint a;
 	}
 	saveSettings(Settings(1), "testapp", "1", "mysubdir");
 	saveSettings(Settings(2), "testapp", "2", "mysubdir");
-	assert(equal(loadSubdirSettings!Settings("testapp", "mysubdir"), only(Settings(1), Settings(2))));
+	auto loaded = loadSubdirSettings!Settings("testapp", "mysubdir").array;
+	assert(loaded.canFind(Settings(1)));
+	assert(loaded.canFind(Settings(2)));
 }
 
 /**
