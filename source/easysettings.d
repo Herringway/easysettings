@@ -64,6 +64,39 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
 	assert(reloadedSettings.texts == ["a", "b", "c"]);
 }
 /**
+ * Loads all settings files from a subdirectory, with the assumption that each
+ * file has the same format.
+ * Params:
+ * name = The main settings directory for the application
+ * subdir = The subdirectory to load these settings files from
+ */
+auto loadSubdirSettings(T, alias settingsFormat = SettingsFormat)(string name, string subdir) {
+	import std.algorithm : cartesianProduct, filter, joiner, map;
+	import std.experimental.logger : tracef;
+	import std.file : dirEntries, exists, SpanMode;
+	import std.path : buildPath, chainPath, withExtension;
+	import std.range : chain, choose, only;
+	const subPath = buildPath(name, subdir);
+	return standardPaths(StandardPath.config, subPath)
+		.cartesianProduct(only(SettingsExtensions!settingsFormat))
+		.filter!(x => x[0].exists)
+		.map!(x => dirEntries(x[0], "*"~x[1], SpanMode.depth))
+		.joiner()
+		.map!(x => fromFile!(T, settingsFormat, DeSiryulize.optionalByDefault)(x));
+}
+///
+@system unittest {
+	import std.algorithm.comparison : equal;
+	import std.range : only;
+	static struct Settings {
+		uint a;
+	}
+	saveSettings(Settings(1), "testapp", "1", "mysubdir");
+	saveSettings(Settings(2), "testapp", "2", "mysubdir");
+	assert(equal(loadSubdirSettings!Settings("testapp", "mysubdir"), only(Settings(1), Settings(2))));
+}
+
+/**
  * Saves settings. Uses user's settings dir.
  * Params:
  * data = The data that will be saved to the settings file.
@@ -79,7 +112,7 @@ void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name,
 	safeSave(paths.front.text, data.toString!settingsFormat());
 }
 ///
-unittest {
+@system unittest {
 	struct Settings {
 		bool blah;
 		string text;
@@ -111,8 +144,10 @@ void deleteSettings(alias settingsFormat = SettingsFormat)(string name, string f
 	}
 }
 ///
-unittest {
+@system unittest {
 	deleteSettings("testapp", "settings", "subdir");
+	deleteSettings("testapp", "settings", "mysubdir");
+	deleteSettings("testapp", "settings", "");
 }
 
 private template SettingsExtensions(T) {
