@@ -49,7 +49,7 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
 	return T.init;
 }
 ///
-@system unittest {
+@safe unittest {
 	struct Settings {
 		bool blah;
 		string text;
@@ -114,7 +114,7 @@ void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name,
 	safeSave(paths.front.text, data.toString!settingsFormat());
 }
 ///
-@system unittest {
+@safe unittest {
 	struct Settings {
 		bool blah;
 		string text;
