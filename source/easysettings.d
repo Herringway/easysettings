@@ -111,7 +111,7 @@ void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name,
 	import std.exception : enforce;
 	auto paths = getSettingsPaths(name, subdir, filename, true);
 	enforce (!paths.empty, "No writable paths found");
-	safeSave(paths.front.text, data.toString!settingsFormat());
+	safeSave(paths.front.text, toString!settingsFormat(data));
 }
 ///
 @safe unittest {
