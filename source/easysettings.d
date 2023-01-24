@@ -22,7 +22,7 @@ auto getSettingsPaths(alias settingsFormat = SettingsFormat)(string name, string
 	const subPath = buildPath(name, subdir);
 	const candidates = writable.choose(only(writablePath(StandardPath.config, subPath, FolderFlag.create)), standardPaths(StandardPath.config, subPath));
 	auto searchPaths = candidates.chain(["."]).cartesianProduct(only(SettingsExtensions!settingsFormat)).map!(x => chainPath(x[0], filename ~ x[1]));
-	tracef("Search paths: %s", searchPaths);
+	debug(verbosesettings) tracef("Search paths: %s", searchPaths);
 	return searchPaths.filter!(x => writable || x.exists);
 }
 
@@ -41,7 +41,7 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
 	import std.experimental.logger : tracef;
 	auto paths = getSettingsPaths!settingsFormat(name, subdir, filename, false);
 	if (!paths.empty) {
-		tracef("Loading settings from '%s'", paths.front);
+		debug(verbosesettings) tracef("Loading settings from '%s'", paths.front);
 		return fromFile!(T, settingsFormat, DeSiryulize.optionalByDefault)(paths.front.text);
 	} else {
 		saveSettings(T.init, name, filename, subdir);
@@ -72,7 +72,6 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, string 
  */
 auto loadSubdirSettings(T, alias settingsFormat = SettingsFormat)(string name, string subdir) {
 	import std.algorithm : cartesianProduct, filter, joiner, map;
-	import std.experimental.logger : tracef;
 	import std.file : dirEntries, exists, SpanMode;
 	import std.path : buildPath, chainPath, withExtension;
 	import std.range : chain, choose, only;
