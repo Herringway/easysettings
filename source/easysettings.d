@@ -10,6 +10,7 @@ enum SettingsFlags {
 	none = 0, /// No flags set
 	writePortable = 1 << 0, /// Prefer writing to the working directory, but read from other directories as normal
 	writeMinimal = 1 << 1, /// Avoid writing values that are identical to the default
+	dontWriteNonexistent = 1 << 2, /// Don't write a settings file if none found
 }
 
 /**
@@ -61,7 +62,7 @@ auto loadSettings(T, alias settingsFormat = SettingsFormat)(string name, Setting
 	if (!paths.empty) {
 		debug(verbosesettings) tracef("Loading settings from '%s'", paths.front);
 		return fromFile!(T, settingsFormat, DeSiryulize.optionalByDefault)(paths.front.text);
-	} else {
+	} else if (!(flags & SettingsFlags.dontWriteNonexistent)) {
 		saveSettings(T.init, name, flags, filename, subdir);
 	}
 	return T.init;
