@@ -9,6 +9,7 @@ private alias SettingsFormat = YAML;
 enum SettingsFlags {
 	none = 0, /// No flags set
 	writePortable = 1 << 0, /// Prefer writing to the working directory, but read from other directories as normal
+	writeMinimal = 1 << 1, /// Avoid writing values that are identical to the default
 }
 
 /**
@@ -127,7 +128,11 @@ void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name,
 	import std.exception : enforce;
 	auto paths = getSettingsPaths(name, subdir, filename, true, flags);
 	enforce (!paths.empty, "No writable paths found");
-	safeSave(paths.front.text, toString!settingsFormat(data));
+	if (flags & SettingsFlags.writeMinimal) {
+		safeSave(paths.front.text, toString!(settingsFormat, Siryulize.omitInits)(data));
+	} else {
+		safeSave(paths.front.text, toString!settingsFormat(data));
+	}
 }
 ///
 @safe unittest {
@@ -139,6 +144,10 @@ void saveSettings(T, alias settingsFormat = SettingsFormat)(T data, string name,
 	saveSettings(Settings(true, "some words", ["c", "b", "a"]), "testapp", SettingsFlags.none, "settings", "subdir");
 
 	assert(loadSettings!Settings("testapp", SettingsFlags.none, "settings", "subdir") == Settings(true, "some words", ["c", "b", "a"]));
+
+	saveSettings(Settings.init, "testapp", SettingsFlags.writeMinimal, "settings", "subdir");
+
+	assert(loadSettings!Settings("testapp", SettingsFlags.none, "settings", "subdir") == Settings.init);
 }
 /**
  * Deletes settings files for the specified app that are handled by this
