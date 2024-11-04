@@ -16,7 +16,7 @@ enum SettingsFlags {
 /**
  * Get a list of paths where settings files were found.
  * Params:
- * settingsForma = The serialization format used to save and load settings (YAML, JSON, etc)
+ * settingsFormat = The serialization format used to save and load settings (YAML, JSON, etc)
  * name = Subdirectory of settings dir to save config to. Created if nonexistent.
  * filename = The filename the settings will be loaded from.
  * subdir = The subdirectory that the settings will be loaded from.
